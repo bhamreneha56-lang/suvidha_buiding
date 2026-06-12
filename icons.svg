@@ -1,84 +1,51 @@
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
+export function calculateBill(startReading, endReading, days = 60, fixedCharges = 50, gstRate = 0.18) {
+  const totalVolume = Math.max(0, endReading - startReading);
+  const dailyAverage = totalVolume / days;
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+  // Slabs configuration (per day)
+  const SLAB_1_LIMIT = 0.59;
+  const SLAB_2_LIMIT = 1.49;
+  
+  const RATE_1 = 21.96;
+  const RATE_2 = 26.01;
+  const RATE_3 = 33.36;
 
-app.use(cors());
-app.use(bodyParser.json());
+  let slab1_scm = 0;
+  let slab2_scm = 0;
+  let slab3_scm = 0;
 
-// Helper function for bill calculation (same as frontend logic)
-function calculateBillLogic(prevReading, currReading, billingDays) {
-  const SCM_total = Math.max(0, currReading - prevReading);
-  const SCM_per_day = billingDays > 0 ? SCM_total / billingDays : 0;
-  const slab1_limit = 0.59 * billingDays;
-  const slab2_limit = 1.49 * billingDays;
-
-  let slab1_scm = 0, slab2_scm = 0, slab3_scm = 0;
-  if (SCM_total <= slab1_limit) {
-    slab1_scm = SCM_total;
-  } else if (SCM_total <= slab2_limit) {
-    slab1_scm = slab1_limit;
-    slab2_scm = SCM_total - slab1_limit;
+  if (dailyAverage <= SLAB_1_LIMIT) {
+    slab1_scm = dailyAverage * days;
+  } else if (dailyAverage <= SLAB_2_LIMIT) {
+    slab1_scm = SLAB_1_LIMIT * days;
+    slab2_scm = (dailyAverage - SLAB_1_LIMIT) * days;
   } else {
-    slab1_scm = slab1_limit;
-    slab2_scm = slab2_limit - slab1_limit;
-    slab3_scm = SCM_total - slab2_limit;
+    slab1_scm = SLAB_1_LIMIT * days;
+    slab2_scm = (SLAB_2_LIMIT - SLAB_1_LIMIT) * days;
+    slab3_scm = (dailyAverage - SLAB_2_LIMIT) * days;
   }
 
-  const slab1_amount = slab1_scm * 21.96;
-  const slab2_amount = slab2_scm * 26.01;
-  const slab3_amount = slab3_scm * 33.36;
-  const fixed_charges = 85.0;
-  const gas_value = slab1_amount + slab2_amount + slab3_amount;
-  const gst = (gas_value + fixed_charges) * 0.05;
-  const total_bill = gas_value + fixed_charges + gst;
+  // Handle minor floating point inaccuracies
+  slab1_scm = Math.round(slab1_scm * 100) / 100;
+  slab2_scm = Math.round(slab2_scm * 100) / 100;
+  slab3_scm = Math.round(slab3_scm * 100) / 100;
 
-  let currentSlab = 'Slab I';
-  if (SCM_per_day > 0.59 && SCM_per_day <= 1.49) currentSlab = 'Slab II';
-  if (SCM_per_day > 1.49) currentSlab = 'Slab III';
+  const amount1 = slab1_scm * RATE_1;
+  const amount2 = slab2_scm * RATE_2;
+  const amount3 = slab3_scm * RATE_3;
+
+  const totalConsumptionAmount = amount1 + amount2 + amount3;
+  const gstAmount = (totalConsumptionAmount + fixedCharges) * gstRate;
+  const netPayable = totalConsumptionAmount + fixedCharges + gstAmount;
 
   return {
-    SCM_total,
-    SCM_per_day,
-    slab1_scm,
-    slab2_scm,
-    slab3_scm,
-    slab1_amount,
-    slab2_amount,
-    slab3_amount,
-    fixed_charges,
-    gas_value,
-    gst,
-    total_bill,
-    currentSlab,
-    avg_rate: SCM_total > 0 ? gas_value / SCM_total : 0,
+    totalVolume: Math.round(totalVolume * 100) / 100,
+    dailyAverage: Math.round(dailyAverage * 100) / 100,
+    slab1: { units: slab1_scm, rate: RATE_1, amount: Math.round(amount1 * 100) / 100 },
+    slab2: { units: slab2_scm, rate: RATE_2, amount: Math.round(amount2 * 100) / 100 },
+    slab3: { units: slab3_scm, rate: RATE_3, amount: Math.round(amount3 * 100) / 100 },
+    fixedCharges: fixedCharges,
+    gstAmount: Math.round(gstAmount * 100) / 100,
+    netPayable: Math.round(netPayable * 100) / 100
   };
 }
-
-app.post('/api/calculate-bill', (req, res) => {
-  const { prevReading, currReading, billingDays } = req.body;
-  const result = calculateBillLogic(prevReading, currReading, billingDays);
-  res.json(result);
-});
-
-// Mock bill history data
-const mockHistory = [
-  { period: 'Apr–May 2026', scm: 42.6, amount: 1108, status: 'DUE' },
-  { period: 'Feb–Mar 2026', scm: 38.2, amount: 991, status: 'PAID' },
-  { period: 'Dec–Jan 2026', scm: 31.0, amount: 805, status: 'PAID' },
-];
-
-app.get('/api/bill-history', (req, res) => {
-  res.json(mockHistory);
-});
-
-// Mock user profile data
-app.get('/api/profile', (req, res) => {
-  res.json({ name: 'Vaishnavi Dhage', email: 'vaishnavi@example.com', role: 'Customer' });
-});
-
-app.listen(PORT, () => {
-  console.log(`🛠️  Server listening on http://localhost:${PORT}`);
-});

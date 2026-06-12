@@ -1,79 +1,36 @@
-import { Link } from 'react-router-dom';
-import { ArrowUpRight } from 'lucide-react';
+import React from 'react';
+import { Shield } from 'lucide-react';
 
-const DemoCard = ({
-  to,
-  title,
-  subtitle,
-  icon: Icon,
-  iconBgClass = 'bg-blue-500',
-  leftBadge,
-  rightBadge,
-  leftBadgeColor = 'bg-green-500',
-  rightBadgeColor = 'bg-blue-500',
-  features = [],
-  bgImage,
-}) => {
-  const cardStyle = bgImage
-    ? {
-        backgroundImage: `linear-gradient(180deg, rgba(30, 41, 59, 0.45) 0%, #0b0f19 100%), url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    : {};
+const ConnectionInfoCard = () => {
+  const connectionDetails = [
+    { label: 'Customer Number', value: 'PNG-2409-8812' },
+    { label: 'Connection Category', value: 'Domestic (Single Dwelling)' },
+    { label: 'Meter Serial Number', value: 'MTR-9921-A' },
+    { label: 'Supply Area / Town', value: 'Jorhat' },
+    { label: 'Pipeline Sector', value: 'Sector 4, Main Line' }
+  ];
 
   return (
-    <Link 
-      to={to} 
-      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 min-h-[300px] border border-gray-700/50 hover:border-[var(--color-primary)]"
-    >
-      <div className="demo-card" style={cardStyle}>
-        {/* Top badges */}
-        <div className="demo-card-badges">
-          {leftBadge && (
-            <span className="demo-card-badge">
-              <span className={`demo-card-badge-dot ${leftBadgeColor}`} />
-              {leftBadge}
-            </span>
-          )}
-          {rightBadge && (
-            <span className="demo-card-badge">
-              <span className={`demo-card-badge-dot ${rightBadgeColor}`} />
-              {rightBadge}
-            </span>
-          )}
+    <div className="dash-card">
+      {/* Header */}
+      <div className="dash-card-header mb-6">
+        <div className="dash-card-header-icon purple">
+          <Shield size={20} />
         </div>
-
-        {/* Center Icon Box */}
-        <div className={`demo-card-icon-container ${iconBgClass}`}>
-          <Icon className="demo-card-icon" size={32} />
-        </div>
-
-        {/* Card Body */}
-        <div className="demo-card-body">
-          <p className="demo-card-subtitle">{subtitle}</p>
-          <h3 className="demo-card-title">{title}</h3>
-        </div>
-
-        {/* Footer features */}
-        {features.length > 0 && (
-          <div className="demo-card-footer">
-            <div className="demo-card-features">
-              {features.map((feature, idx) => (
-                <span key={idx} className="demo-card-feature-item">
-                  {feature}
-                  {idx < features.length - 1 && <span className="demo-card-feature-sep">•</span>}
-                </span>
-              ))}
-            </div>
-            <div className="demo-card-arrow-circle">
-              <ArrowUpRight size={16} className="demo-card-arrow" />
-            </div>
-          </div>
-        )}
+        <span className="dash-card-header-title">Connection Details</span>
       </div>
-    </Link>
+
+      {/* Details List */}
+      <div className="flex flex-col">
+        {connectionDetails.map((item, index) => (
+          <div key={index} className="conn-info-row">
+            <span className="conn-info-label">{item.label}</span>
+            <span className="conn-info-value">{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
-export default DemoCard;
+export default ConnectionInfoCard;

@@ -1,32 +1,23 @@
-{
-  "name": "gasportal",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "lucide-react": "^1.16.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1",
-    "react-webcam": "^7.2.0",
-    "recharts": "^3.8.1",
-    "tesseract.js": "^4.1.4"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.6.0",
-    "vite": "^8.0.12"
+import Tesseract from 'tesseract.js';
+
+/**
+ * Run OCR on a base64/URL image.
+ * @param {string} imageSource - base64 data URL or image URL
+ * @param {function} onProgress - optional callback(fraction 0–1)
+ * @returns {Promise<string>} raw OCR text
+ */
+export const recognizeCode = async (imageSource, onProgress) => {
+  try {
+    const { data: { text } } = await Tesseract.recognize(imageSource, 'eng', {
+      logger: (m) => {
+        if (m.status === 'recognizing text' && onProgress) {
+          onProgress(m.progress);
+        }
+      },
+    });
+    return text;
+  } catch (err) {
+    console.error('OCR recognition error:', err);
+    return '';
   }
-}
+};

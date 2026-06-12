@@ -1,103 +1,97 @@
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Activity } from 'lucide-react';
+import { useState } from 'react';
+import { Truck, Info, CheckCircle2 } from 'lucide-react';
 
-const data = [
-  { month: 'Nov', scm: 35.0 },
-  { month: 'Dec', scm: 42.0 },
-  { month: 'Jan', scm: 58.0 },
-  { month: 'Feb', scm: 49.0 },
-  { month: 'Mar', scm: 38.0 },
-  { month: 'Apr', scm: 78.5 }, // Active Month
-];
+const BookCylinderCard = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [booked, setBooked] = useState(false);
 
-const ConsumptionChart = () => {
-  const latest = 78.5;
-  const dailyAvg = 1.31;
+  const lastDelivery = new Date('2026-05-12');
+  const avgDays = (40 + 45 + 42 + 48) / 4; // 43.75
+  const predictedEmpty = new Date(lastDelivery);
+  predictedEmpty.setDate(predictedEmpty.getDate() + Math.round(avgDays));
+  
+  const bookingStart = new Date(predictedEmpty);
+  bookingStart.setDate(bookingStart.getDate() - 5);
+  
+  const bookingEnd = new Date(predictedEmpty);
+  bookingEnd.setDate(bookingEnd.getDate() - 2);
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const handleConfirm = () => {
+    setBooked(true);
+    setTimeout(() => {
+      setShowModal(false);
+    }, 2000);
+  };
 
   return (
-    <div className="dash-card">
-      {/* Header */}
-      <div className="dash-card-header mb-6">
-        <div className="dash-card-header-icon blue">
-          <Activity size={20} />
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col gap-4">
+      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+        <Truck className="text-orange-500" /> Book Cylinder
+      </h2>
+
+      {/* AI Booking Assistant */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="flex items-center gap-1.5 text-amber-800 font-bold mb-1">
+          <Info size={16} /> <span>AI Booking Assistant</span>
         </div>
-        <span className="dash-card-header-title">Consumption (6 Months)</span>
+        <p className="text-sm text-amber-900 leading-relaxed">
+          Based on your last 4 cylinders and family size, your current cylinder may last till <strong>{formatDate(predictedEmpty)}</strong>. We recommend booking between <strong>{formatDate(bookingStart)}</strong> and <strong>{formatDate(bookingEnd)}</strong>.
+        </p>
       </div>
 
-      {/* KPI Section */}
-      <div className="grid grid-cols-2 gap-4 border-b border-[var(--color-border)] pb-5 mb-5">
-        <div>
-          <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">This Month</p>
-          <p className="text-3xl font-extrabold text-gray-900 dark:text-white mt-1">{latest.toFixed(1)} SCM</p>
-        </div>
-        <div>
-          <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider">Daily Avg</p>
-          <p className="text-3xl font-extrabold text-gray-900 dark:text-white mt-1">{dailyAvg.toFixed(2)} SCM/d</p>
-        </div>
+      <div className="flex flex-col gap-1 mt-2">
+        <p className="text-sm text-gray-600">Last Delivery: <strong className="text-gray-900">12 May 2026</strong></p>
+        <p className="text-sm text-gray-600">Status: <strong className="text-green-600">Eligible for Booking</strong></p>
       </div>
 
-      {/* Chart */}
-      <div className="h-64 mb-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-                <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.3} />
-              </linearGradient>
-              <linearGradient id="barGradientActive" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f97316" stopOpacity={0.9} />
-                <stop offset="100%" stopColor="#ea580c" stopOpacity={0.3} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-            <XAxis 
-              dataKey="month" 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontWeight: 600 }}
-            />
-            <YAxis 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontWeight: 600 }}
-            />
-            <Tooltip 
-              cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-              contentStyle={{ 
-                backgroundColor: 'var(--color-surface)', 
-                borderColor: 'var(--color-border)', 
-                borderRadius: '12px',
-                color: 'var(--color-text)',
-                fontWeight: 600
-              }} 
-            />
-            <Bar dataKey="scm" radius={[6, 6, 0, 0]}>
-              {data.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.month === 'Apr' ? 'url(#barGradientActive)' : 'url(#barGradient)'} 
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="mt-2">
+        <button 
+          onClick={() => setShowModal(true)}
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition-colors shadow-sm"
+        >
+          Book Now
+        </button>
+        <p className="text-xs text-gray-500 text-center mt-2">OTP will be sent to your registered mobile number upon dispatch.</p>
       </div>
 
-      {/* Legend */}
-      <div className="chart-legend border-t border-[var(--color-border)] pt-4">
-        <div className="chart-legend-item">
-          <span className="chart-legend-dot" style={{ backgroundColor: '#3b82f6' }} />
-          <span>Standard Usage</span>
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden p-6">
+            {!booked ? (
+              <>
+                <h3 className="font-bold text-lg text-gray-900 mb-4">Confirm Cylinder Booking</h3>
+                <div className="space-y-2 text-sm text-gray-700 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p><strong>Cylinder Type:</strong> 14.2 kg LPG</p>
+                  <p><strong>Distributor:</strong> Assam Gas Agency (IOCL)</p>
+                  <p><strong>Expected Delivery:</strong> Within 48–96 hours</p>
+                  <p><strong>OTP:</strong> Will be sent to +91-XXXXXX7890 on dispatch</p>
+                </div>
+                <div className="mt-6 flex gap-3">
+                  <button onClick={() => setShowModal(false)} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-lg transition-colors">
+                    Cancel
+                  </button>
+                  <button onClick={handleConfirm} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg transition-colors">
+                    Confirm Booking
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4 flex flex-col items-center gap-3 animate-in zoom-in-95 duration-300">
+                <CheckCircle2 size={48} className="text-green-500" />
+                <h3 className="font-bold text-lg text-gray-900">Booking Confirmed!</h3>
+                <p className="text-sm text-gray-600">Booking ID: <strong className="text-gray-900 font-mono">BK-2026-00789</strong></p>
+                <p className="text-xs text-gray-500 mt-2">Track in Delivery History.</p>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="chart-legend-item">
-          <span className="chart-legend-dot" style={{ backgroundColor: '#f97316' }} />
-          <span>Active Billing Slabs</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
 
-export default ConsumptionChart;
+export default BookCylinderCard;

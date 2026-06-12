@@ -1,147 +1,73 @@
-import React, { useState } from 'react';
-import { Camera, CheckCircle, Upload } from 'lucide-react';
+import { useState } from 'react';
+import { ShieldAlert, ChevronDown, ChevronUp, Phone, Info } from 'lucide-react';
 
-const MeterReadingCard = () => {
-  const [inputValue, setInputValue] = useState('01452.00');
-  const [status, setStatus] = useState('Pending'); // Pending, Verifying, Accepted
-  const [fileUploaded, setFileUploaded] = useState(false);
-
-  const handleInputChange = (e) => {
-    let val = e.target.value;
-    // Allow only numbers and one decimal point
-    val = val.replace(/[^0-9.]/g, '');
-    const parts = val.split('.');
-    if (parts.length > 2) return; // ignore multiple dots
-    
-    // Limit integer part to 5 digits, decimal part to 2 digits
-    let integerPart = parts[0] ? parts[0].slice(0, 5) : '';
-    let decimalPart = parts[1] ? parts[1].slice(0, 2) : '';
-
-    let newVal = integerPart;
-    if (val.includes('.')) {
-      newVal += '.' + decimalPart;
-    }
-    setInputValue(newVal);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setStatus('Verifying');
-    // Simulate API verification
-    setTimeout(() => {
-      setStatus('Accepted');
-    }, 1500);
-  };
-
-  // Process digits for the digital meter display
-  const getDigits = () => {
-    const parts = inputValue.split('.');
-    const integerStr = (parts[0] || '').padStart(5, '0');
-    const decimalStr = (parts[1] || '').padEnd(2, '0');
-
-    return {
-      integers: integerStr.split(''),
-      decimals: decimalStr.split('')
-    };
-  };
-
-  const { integers, decimals } = getDigits();
+const SafetyGuidelinesCard = () => {
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="dash-card">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <div className="dash-card-header-icon green">
-            <Camera size={20} />
-          </div>
-          <span className="dash-card-header-title">Meter Submission</span>
-        </div>
-        
-        {status === 'Accepted' && (
-          <span className="badge badge-success flex items-center gap-1">
-            <CheckCircle size={12}/> Verified
-          </span>
-        )}
-        {status === 'Verifying' && (
-          <span className="badge badge-warning animate-pulse">Verifying</span>
-        )}
-        {status === 'Pending' && (
-          <span className="slab-active-badge" style={{ backgroundColor: '#fff7ed', color: '#ea580c' }}>Due in 5 Days</span>
-        )}
+    <div className="bg-[#fef2f2] rounded-xl p-6 border border-red-200 flex flex-col gap-5 shadow-sm">
+      <h2 className="text-xl font-bold text-red-600 flex items-center gap-2">
+        <ShieldAlert className="text-red-600" /> Safety Guidelines
+      </h2>
+
+      <ul className="space-y-3 text-sm text-red-900 leading-relaxed list-disc list-outside ml-4">
+        <li className="marker:text-red-500">Turn off the regulator when not in use, especially at night.</li>
+        <li className="marker:text-red-500">Ensure good kitchen ventilation. Do not close all windows.</li>
+        <li className="marker:text-red-500">Check the Suraksha hose regularly for cracks or expiry.</li>
+        <li className="marker:text-red-500">Always light the match before turning on the burner.</li>
+        <li className="marker:text-red-500">Never use LPG near an open flame or electrical switch.</li>
+        <li className="marker:text-red-500">Store cylinder upright in a ventilated area. Never lay it sideways.</li>
+      </ul>
+
+      {/* Suraksha Hose Reminder */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex gap-2 items-start mt-2">
+        <Info className="text-yellow-600 flex-shrink-0 mt-0.5" size={16} />
+        <p className="text-xs text-yellow-800 leading-relaxed font-medium">
+          🔔 Suraksha hose expires every 5 years. Check the label for your expiry date. <br/>
+          <span className="font-bold text-yellow-900">Current hose: Expires Nov 2027 (mock).</span>
+        </p>
       </div>
 
-      {/* Info */}
-      <div className="mb-6">
-        <p className="text-xs text-[var(--color-text-muted)] font-semibold uppercase tracking-wider mb-1">Latest Confirmed Reading</p>
-        <p className="font-extrabold text-lg">01452.00 SCM <span className="text-xs font-normal text-[var(--color-text-muted)]">on 12 Apr 2026</span></p>
-      </div>
+      <hr className="border-red-200" />
 
-      {/* Digital Meter Display Box */}
-      <div className="meter-display-container mb-6">
-        <p className="meter-display-label">Current Meter Reading</p>
-        <div className="meter-display-digits">
-          {integers.map((d, i) => (
-            <div key={`int-${i}`} className="meter-box">{d}</div>
-          ))}
-          <div className="meter-dot">.</div>
-          {decimals.map((d, i) => (
-            <div key={`dec-${i}`} className="meter-box decimal">{d}</div>
-          ))}
-        </div>
-        <p className="meter-display-unit">Standard Cubic Meter (SCM)</p>
-      </div>
-
-      {/* Input & Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="input-label mb-2 block text-xs uppercase tracking-wider font-semibold text-[var(--color-text-muted)]">Enter Current Meter Reading</label>
-          <input 
-            type="text" 
-            className="input-field w-full text-center font-bold text-lg py-2"
-            value={inputValue}
-            onChange={handleInputChange}
-            placeholder="01452.00"
-            disabled={status !== 'Pending'}
-          />
-        </div>
-
-        {/* Upload Dropzone */}
-        <div>
-          <label className="input-label mb-2 block text-xs uppercase tracking-wider font-semibold text-[var(--color-text-muted)]">Upload Meter Photo Proof</label>
-          <div 
-            onClick={() => status === 'Pending' && setFileUploaded(true)}
-            className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-              fileUploaded 
-                ? 'border-green-500 bg-green-50/10' 
-                : 'border-[var(--color-border)] hover:bg-[var(--color-bg)] text-[var(--color-text-muted)]'
-            }`}
-          >
-            {fileUploaded ? (
-              <>
-                <CheckCircle size={24} className="text-green-500 mb-2" />
-                <span className="text-xs font-bold text-green-600 dark:text-green-400">meter_photo_proof.jpg uploaded</span>
-              </>
-            ) : (
-              <>
-                <Upload size={24} className="mb-2" />
-                <span className="text-xs font-semibold">Click to upload meter photo</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Submit */}
+      {/* Expandable Gas Smell Section */}
+      <div className="flex flex-col border border-red-300 rounded-lg overflow-hidden bg-white/50">
         <button 
-          type="submit" 
-          className="btn btn-primary w-full py-3 mt-2 font-bold"
-          disabled={status !== 'Pending' || !inputValue}
+          onClick={() => setExpanded(!expanded)} 
+          className="flex justify-between items-center p-4 bg-red-100 hover:bg-red-200 transition-colors w-full text-left"
         >
-          {status === 'Pending' ? 'SUBMIT READING' : status === 'Verifying' ? 'VERIFYING...' : 'VERIFIED'}
+          <span className="font-bold text-red-800 flex items-center gap-2">
+            ⚠️ If you smell gas...
+          </span>
+          {expanded ? <ChevronUp size={20} className="text-red-800" /> : <ChevronDown size={20} className="text-red-800" />}
         </button>
-      </form>
+        
+        {expanded && (
+          <div className="p-4 bg-white/80 animate-in slide-in-from-top-2 duration-200">
+            <ol className="space-y-2 text-sm text-red-900 font-medium">
+              <li><strong className="text-red-700">Step 1:</strong> Turn off regulator and all burner knobs immediately.</li>
+              <li><strong className="text-red-700">Step 2:</strong> Do NOT operate any electrical switches or create sparks.</li>
+              <li><strong className="text-red-700">Step 3:</strong> Open all doors and windows.</li>
+              <li><strong className="text-red-700">Step 4:</strong> Move cylinder to a ventilated outdoor area if safe.</li>
+              <li><strong className="text-red-700">Step 5:</strong> Call emergency: 1906 or your distributor.</li>
+            </ol>
+          </div>
+        )}
+      </div>
+
+      <button 
+        onClick={() => {
+          if(window.confirm("This will call 1906 — LPG Emergency Helpline. Proceed?")) {
+            // mock call
+          }
+        }}
+        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm mt-2"
+      >
+        <Phone size={18} /> Call Emergency: 1906
+      </button>
+
     </div>
   );
 };
 
-export default MeterReadingCard;
+export default SafetyGuidelinesCard;
